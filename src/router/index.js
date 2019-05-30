@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../Home'
-import BingoRoom from '../games/bingo/Room'
+import BingoRoom from '../games/bingo/BingoRoom'
 import BingoEmpty from '../games/bingo/Empty'
 
 Vue.use(VueRouter);

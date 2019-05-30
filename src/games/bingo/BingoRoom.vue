@@ -1,18 +1,21 @@
 <template>
   <div>
     <h3>빙고 시작합시다</h3>
-    <table class="bingo-wrap">
-      <tr v-for="(row, rowIdx) in bingoInputs" :key="rowIdx">
-        <td v-for="(col, colIdx) in row" :key="colIdx">
-          <template v-if="saveBingo">
-            <div class="bingo-item" :style="itemSize">{{ col[0] }}</div>
-          </template>
-          <template v-else>
-            <input type="text" class="bingo-item" :style="itemSize" v-model.number="col[0]" />
-          </template>
-        </td>
-      </tr>
-    </table>
+    <div>
+      <table class="bingo-wrap">
+        <tr v-for="(row, rowIdx) in bingoInputs" :key="rowIdx">
+          <td v-for="(col, colIdx) in row" :key="colIdx">
+            <template v-if="saveBingo">
+              <div class="bingo-item" :class="{ checked: col.checked }" :style="itemSize" @click="col.checked = !col.checked">{{ col.key }}</div>
+            </template>
+            <template v-else>
+              <input type="text" class="bingo-item" :style="itemSize" v-model.number="col.key" />
+            </template>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <button @click="saveBingo = true" v-if="!saveBingo">준비</button>
   </div>
 </template>
 
@@ -53,7 +56,7 @@ export default {
       for (let i = 0; i < this.bingoSize; i++) {
         for (let j = 0; j < this.bingoSize; j++) {
           // cols.push(this.bingoSize * i + j);
-          cols.push([]);
+          cols.push({ key: null, checked: false });
         }
         rows.push(cols);
         cols = [];
@@ -109,6 +112,9 @@ table.bingo-wrap tr td:not(:last-child) {
   border: none;
   padding: 0;
   box-sizing: border-box;
+}
+.bingo-item.checked {
+  background-color: burlywood;
 }
 input.bingo-item {
   background-color: #ddfaff;
