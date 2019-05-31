@@ -1,8 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../Home'
-import BingoRoom from '../games/bingo/BingoRoom'
-import BingoEmpty from '../games/bingo/Empty'
+import bingoRoutes from './bingo'
 
 Vue.use(VueRouter);
 
@@ -13,9 +12,8 @@ const NotFound = {
 const router = new VueRouter({
     mode: 'history',
     routes: [
+        ...bingoRoutes,
         { path: '/', component: Home },
-        { path: '/bingo', component: BingoEmpty },
-        { path: '/bingo/:size', component: BingoRoom },
         { path: '*', component: NotFound },
     ],
 });

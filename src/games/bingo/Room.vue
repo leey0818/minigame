@@ -1,5 +1,9 @@
 <template>
   <div>
+    <div class="position-fixed w-100 h-100 bg-white text-center pt-5" v-if="loading">
+      <b-spinner class="align-middle"></b-spinner>
+      <span class="ml-1">해당 방에 연결 중 입니다...</span>
+    </div>
     <h3>빙고 시작합시다</h3>
     <div>
       <table class="bingo-wrap">
@@ -15,7 +19,7 @@
         </tr>
       </table>
     </div>
-    <button @click="saveBingo = true" v-if="!saveBingo">준비</button>
+    <button @click="saveBingo = !saveBingo">{{ saveBingo ? '준비해제' : '준비' }}</button>
   </div>
 </template>
 
@@ -23,6 +27,8 @@
 export default {
   data () {
     return {
+      loading: true,
+      maxUser: -1,
       saveBingo: false,
 
       bingoSize: 0,
@@ -40,14 +46,6 @@ export default {
       };
     },
   },
-  watch: {
-    bingoSize () {
-      this.generateCards();
-    },
-    '$route.params'() {
-      this.changeBingoSize(this.$route.params.size);
-    },
-  },
   methods: {
     generateCards() {
       let rows = [];
@@ -56,7 +54,7 @@ export default {
       for (let i = 0; i < this.bingoSize; i++) {
         for (let j = 0; j < this.bingoSize; j++) {
           // cols.push(this.bingoSize * i + j);
-          cols.push({ key: null, checked: false });
+          cols.push({ key: '', checked: false });
         }
         rows.push(cols);
         cols = [];
@@ -64,20 +62,28 @@ export default {
 
       this.bingoInputs = rows;
     },
-    changeBingoSize (size) {
-      const bingoSize = parseInt(size, 10);
-
-      if (isNaN(bingoSize)) {
-        this.$router.replace('/bingo');
-        return;
-      }
-
-      this.bingoSize = bingoSize;
-    },
   },
 
   created() {
-    this.changeBingoSize(this.$route.params.size);
+    const roomId = this.$route.params.id;
+
+    this.$socket.off('room:join');
+    this.$socket.on('room:join', (data) => {
+      if (!data.success) {
+        alert('해당 방이 존재하지 않습니다.');
+        this.$router.replace('/bingo/list')
+        return false;
+      }
+
+      this.loading = false;
+      this.bingoSize = data.size;
+      this.maxUser = data.maxUser || -1;
+
+      // 빙고판 생성
+      this.generateCards();
+    });
+
+    this.$socket.emit('room:join', roomId);
   },
 }
 </script>
