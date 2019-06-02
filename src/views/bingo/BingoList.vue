@@ -1,6 +1,9 @@
 <template>
   <b-container fluid class="pt-2">
-    <h3>생성된 방 목록</h3>
+    <div>
+      <h3 class="d-inline-block">생성된 방 목록</h3>
+      <button class="btn btn-sm btn-outline-secondary float-right">방 생성</button>
+    </div>
     <div style="max-width:560px">
       <b-table small bordered :fields="fields" :items="items" :busy.sync="loading">
         <template slot="index" slot-scope="data">
@@ -23,7 +26,7 @@
 
 <script>
 export default {
-  data() {
+  data () {
     return {
       loading: true,
       fields: [
@@ -53,24 +56,26 @@ export default {
       items: [],
     };
   },
-  methods: {
-    enterRoom() {
-      console.log(arguments);
+  sockets: {
+    reconnect () {
+      this.$socket.emit('list');
     },
-  },
-  created() {
-    this.loading = true;
-
-    this.$socket.off('list');
-    this.$socket.on('list', (data) => {
-      const rooms = data.rooms || [];
-
+    list (data) {
       this.loading = false;
+
+      const rooms = data.rooms || [];
       this.items = rooms.map((room) => {
         return { key: room.id, title: room.title, count: room.curUser };
       });
-    });
-
+    },
+  },
+  methods: {
+    enterRoom () {
+      console.log(arguments);
+    },
+  },
+  created () {
+    this.loading = true;
     this.$socket.emit('list');
   },
 }

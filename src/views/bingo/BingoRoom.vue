@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <b-container fluid class="pt-2">
     <div class="position-fixed w-100 h-100 bg-white text-center pt-5" v-if="loading">
       <b-spinner class="align-middle"></b-spinner>
       <span class="ml-1">해당 방에 연결 중 입니다...</span>
@@ -7,36 +7,42 @@
     <h3>빙고 시작합시다</h3>
     <div>
       <table class="bingo-wrap">
-        <tr v-for="(row, rowIdx) in bingoInputs" :key="rowIdx">
-          <td v-for="(col, colIdx) in row" :key="colIdx">
-            <template v-if="saveBingo">
-              <div class="bingo-item" :class="{ checked: col.checked }" :style="itemSize" @click="col.checked = !col.checked">{{ col.key }}</div>
+        <tr v-for="(_, row) in bingoSize" :key="row">
+          <td v-for="(_, col) in bingoSize" :key="col">
+            <template v-if="ready">
+              <div
+                class="bingo-item"
+                :class="getCardStatus(row, col)"
+                :style="itemStyle"
+                @click="clickCard(row, col)">{{ inputs[getCardIndex(row, col)] }}</div>
             </template>
             <template v-else>
-              <input type="text" class="bingo-item" :style="itemSize" v-model.number="col.key" />
+              <input type="text" class="bingo-item" :style="itemStyle" v-model.number="inputs[getCardIndex(row, col)]" />
             </template>
           </td>
         </tr>
       </table>
     </div>
-    <button @click="saveBingo = !saveBingo">{{ saveBingo ? '준비해제' : '준비' }}</button>
-  </div>
+    <button @click="ready = !ready">{{ ready ? '준비해제' : '준비' }}</button>
+  </b-container>
 </template>
 
 <script>
 export default {
+  props: ['roomId'],
   data () {
     return {
       loading: true,
       maxUser: -1,
-      saveBingo: false,
-
       bingoSize: 0,
-      bingoInputs: [],
+
+      ready: false,
+      inputs: [],
+      checks: [],
     };
   },
   computed: {
-    itemSize () {
+    itemStyle () {
       const size = Math.max(Math.ceil(400 / this.bingoSize), 60) + 'px';
 
       return {
@@ -46,32 +52,11 @@ export default {
       };
     },
   },
-  methods: {
-    generateCards() {
-      let rows = [];
-      let cols = [];
-
-      for (let i = 0; i < this.bingoSize; i++) {
-        for (let j = 0; j < this.bingoSize; j++) {
-          // cols.push(this.bingoSize * i + j);
-          cols.push({ key: '', checked: false });
-        }
-        rows.push(cols);
-        cols = [];
-      }
-
-      this.bingoInputs = rows;
-    },
-  },
-
-  created() {
-    const roomId = this.$route.params.id;
-
-    this.$socket.off('room:join');
-    this.$socket.on('room:join', (data) => {
+  sockets: {
+    'room:join' (data) {
       if (!data.success) {
         alert('해당 방이 존재하지 않습니다.');
-        this.$router.replace('/bingo/list')
+        this.$router.replace('/bingo/list');
         return false;
       }
 
@@ -79,11 +64,29 @@ export default {
       this.bingoSize = data.size;
       this.maxUser = data.maxUser || -1;
 
-      // 빙고판 생성
       this.generateCards();
-    });
+    },
+  },
+  methods: {
+    generateCards () {
+      this.inputs = new Array(this.bingoSize * this.bingoSize).fill('');
+      this.checks = new Array(this.bingoSize * this.bingoSize).fill(false);
+    },
+    getCardIndex (row, col) {
+      return (this.bingoSize * row) + col;
+    },
+    getCardStatus (row, col) {
+      return { checked: this.checks[this.getCardIndex(row, col)] };
+    },
 
-    this.$socket.emit('room:join', roomId);
+    clickCard (row, col) {
+      const index = this.getCardIndex(row, col);
+      this.$set(this.checks, index, !this.checks[index]);
+    },
+  },
+
+  created () {
+    this.$socket.emit('room:join', this.roomId);
   },
 }
 </script>

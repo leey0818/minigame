@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Home from '../Home'
+import Home from '@/views/Home'
 import bingoRoutes from './bingo'
 
 Vue.use(VueRouter);

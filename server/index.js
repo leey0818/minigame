@@ -1,7 +1,8 @@
 const io = require('socket.io')();
 const port = 3000;
+const options = {};
 
-const roomIds = ['room1', 'room2'];
+const roomIds = ['room2'];
 const roomInfos = {
   room2: {
     title: '이것은 첫번째 방이다.',
@@ -59,4 +60,4 @@ bingoNsp.on('connection', (socket) => {
 
 // listen port
 console.log(`listening port ${port}`);
-io.listen(port);
+io.listen(port, options);

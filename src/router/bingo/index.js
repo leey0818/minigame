@@ -1,9 +1,9 @@
-import Room from '@/games/bingo/Room'
-import RoomList from '@/games/bingo/RoomList'
+import Room from '@/views/bingo/BingoRoom'
+import RoomList from '@/views/bingo/BingoList'
 
 const routes = [
   { path: '/bingo/list', component: RoomList },
-  { path: '/bingo/:id', component: Room },
+  { path: '/bingo/:roomId', component: Room, props: true },
 ];
 
 export default routes;
