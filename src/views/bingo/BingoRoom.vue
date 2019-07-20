@@ -9,16 +9,13 @@
       <table class="bingo-wrap">
         <tr v-for="(_, row) in bingoSize" :key="row">
           <td v-for="(_, col) in bingoSize" :key="col">
-            <template v-if="ready">
-              <div
-                class="bingo-item"
-                :class="getCardStatus(row, col)"
-                :style="itemStyle"
-                @click="clickCard(row, col)">{{ inputs[getCardIndex(row, col)] }}</div>
-            </template>
-            <template v-else>
-              <input type="text" class="bingo-item" :style="itemStyle" v-model.number="inputs[getCardIndex(row, col)]" />
-            </template>
+            <bingo-card
+              maxlength="4"
+              :text.sync="inputs[getCardIndex(row, col)]"
+              :readonly="ready"
+              :class="getCardStatus(row, col)"
+              :style="itemStyle"
+              @click="clickCard(row, col)"></bingo-card>
           </td>
         </tr>
       </table>
@@ -28,7 +25,12 @@
 </template>
 
 <script>
+import BingoCard from '@/components/bingo/BingoCard';
+
 export default {
+  components: {
+    BingoCard,
+  },
   props: ['roomId'],
   data () {
     return {
@@ -108,24 +110,5 @@ table.bingo-wrap tr:not(:last-child) {
 }
 table.bingo-wrap tr td:not(:last-child) {
   border-right: 1px solid #888;
-}
-
-.bingo-item {
-  width: 100%;
-  height: 100%;
-  /* background-color: burlywood; */
-  font-size: 14px;
-  font-weight: normal;
-  font-family: 'Nanum Gothic';
-  text-align: center;
-  border: none;
-  padding: 0;
-  box-sizing: border-box;
-}
-.bingo-item.checked {
-  background-color: burlywood;
-}
-input.bingo-item {
-  background-color: #ddfaff;
 }
 </style>
