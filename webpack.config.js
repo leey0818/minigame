@@ -6,8 +6,9 @@ module.exports = {
   devtool: '#eval-source-map',
   entry: './src/main.js',
   output: {
+    filename: '[name].js',
     path: path.resolve(__dirname, 'dist'),
-    filename: '[name].js'
+    publicPath: '/',
   },
   module: {
     rules: [
@@ -45,6 +46,9 @@ module.exports = {
       template: 'public/index.html'
     }),
   ],
+  devServer: {
+    historyApiFallback: true,
+  },
 }
 
 if (process.env.NODE_ENV === 'production') {

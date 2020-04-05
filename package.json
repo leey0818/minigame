@@ -6,12 +6,12 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_ENV=development webpack-dev-server",
+    "dev": "cross-env NODE_ENV=development webpack-dev-server --hot",
     "build": "cross-env NODE_ENV=production webpack --progress --hide-modules"
   },
   "dependencies": {
-    "bootstrap": "^4.3.1",
-    "bootstrap-vue": "^2.0.0-rc.21",
+    "bootstrap": "^4.4.1",
+    "bootstrap-vue": "^2.10.1",
     "socket.io-client": "^2.2.0",
     "vue": "^2.6.10",
     "vue-router": "^3.0.6",
