@@ -11,8 +11,22 @@ class GameRoom {
     this.turn  = 0;  // 차례
   }
 
-  addRoomUser(user) {
-    this.users.push(user);
+  leaveUser(user) {
+    const idx = this.users.indexOf(user);
+    // 방 유저에서 삭제
+    if (idx >= 0) {
+      this.users.splice(idx, 1);
+    }
+
+    // 방이 빈 경우 방 삭제
+    if (this.users.length === 0) {
+      console.log(`Destroyed room. ${this.id}`);
+      delete roomMap[this.id];
+    }
+    // 내가 방장이면 다른사람에게 방장권한 부여
+    else if (this.owner === user) {
+      this.owner = this.users[0];
+    }
   }
 }
 
@@ -45,6 +59,7 @@ const createRoom = (user) => {
 
       // 방 목록에 추가
       roomMap[room.id] = room;
+      console.log(`created room size: ${Object.keys(roomMap).length}`);
 
       // 유저 객체에 방 객체 추가
       user.room = room;
@@ -73,11 +88,11 @@ const joinRoom = (user, roomId) => {
   // 방 입장
   return new Promise((resolve) => {
     user.socket.join(room.id, () => {
-      console.log(`joined room ${room.id} to user ${user.id}`);
-
       // 방에 사용자 정보 추가
-      room.addRoomUser(user);
+      room.users.push(user);
       user.room = room;
+
+      console.log(`joined room ${room.id}[${room.users.length}] to user ${user.id}`);
 
       // broadcast
       user.socket.to(room.id).emit('room:join', { opponent: { nickname: user.nickname } });
