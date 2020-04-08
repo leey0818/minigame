@@ -1,4 +1,4 @@
-class GameUser {
+class BaseGameUser {
   constructor(socket) {
     this.socket = socket;
     this.setEventListeners();
@@ -15,4 +15,4 @@ class GameUser {
   setEventListeners() {}
 }
 
-module.exports = { GameUser };
+module.exports = { BaseGameUser };

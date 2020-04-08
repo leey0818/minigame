@@ -1,4 +1,4 @@
-const { GameUser } = require('./index');
+const { BaseGameUser } = require('./base');
 
 const userMap = {};
 const roomMap = {
@@ -10,7 +10,7 @@ const roomMap = {
   },
 };
 
-class BingoUser extends GameUser {
+class BingoUser extends BaseGameUser {
   // set event listener
   setEventListeners() {
     this.socket.on('disconnect', onDisconnect(this));

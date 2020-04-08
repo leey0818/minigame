@@ -1,56 +1,15 @@
-const { GameUser } = require('../index');
+const { createUser } = require('./user');
 const {
   createRoom,
   joinRoom,
-  findWaitRoomIds,
+  getWaitRoomIds,
 } = require('./room');
 
-const userMap = {};
-
-class TicTakToeUser extends GameUser {
-  constructor(socket) {
-    super(socket);
-    this.nickname = 'Anonymous';
-  }
-
-  // set event listener
-  setEventListeners() {
-    this.socket.on('disconnect', onDisconnect(this));
-    // this.socket.on('room:create', onCreateRoom(this));
-    // this.socket.on('room:join', onJoinRoom(this));
-  }
-
-  get roomId() {
-    return this.room;
-  }
-
-  set roomId(id) {
-    this.room = id;
-  }
-
-  get player() {
-    return this.opponent;
-  }
-
-  set player(id) {
-    this.opponent = id;
-  }
-}
-
-const onDisconnect = (user) => (reason) => {
-  delete userMap[user.id];
-  console.log(`${user.id} is disconnected... ${reason}`);
-};
-
 const onConnect = (socket) => {
-  const user = new TicTakToeUser(socket);
+  const user = createUser(socket);
 
-  // 유저 목록에 추가
-  userMap[user.id] = user;
-
-  console.log(`connected ttt game to ${user.id} ${Object.keys(userMap).length}`);
-
-  const waitRoomIds = findWaitRoomIds();
+  // 대기 중인 방목록
+  const waitRoomIds = getWaitRoomIds();
 
   if (waitRoomIds.length) {
     // 대기 중인 방에 접속
