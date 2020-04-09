@@ -6,23 +6,34 @@ class GameUser extends BaseGameUser {
   constructor(socket) {
     super(socket);
     this.nickname = 'Anonymous';
+    this.room = null; // 방 정보
   }
 
-  // set event listener
-  setEventListeners() {
-    this.socket.on('disconnect', onDisconnect(this));
+  // 방 입장
+  joinRoom(room) {
+    this.room = room;
+    this.room.join(this);
   }
 
-  get roomId() {
-    return this.room && this.room.id;
+  // 방 퇴장
+  leaveRoom() {
+    if (this.room) {
+      this.room.leave(this);
+      this.room = null;
+    }
   }
 }
 
-const onDisconnect = (user) => (reason) => {
-  if (user.room) {
-    user.room.leaveUser(user);
-  }
+/**
+ * 사용자 연결종료
+ * @param {GameUser} user 사용자 객체
+ * @param {string} reason disconnect reason
+ */
+const leaveUser = (user, reason) => {
+  // 유저 방 퇴장
+  user.leaveRoom();
 
+  // 유저 목록에서 삭제
   delete userMap[user.id];
   console.log(`Disconnected user ${user.id} by ${reason}`);
 };
@@ -36,10 +47,9 @@ const createUser = (socket) => {
 
   // 유저 목록에 추가
   userMap[user.id] = user;
-
   console.log(`connected tictaktoe game to ${user.id}`);
 
   return user;
 };
 
-module.exports = { createUser };
+module.exports = { createUser, leaveUser };

@@ -1,19 +1,31 @@
-const { createUser } = require('./user');
+const {
+  createUser,
+  leaveUser,
+} = require('./user');
 const {
   createRoom,
   joinRoom,
-  getWaitRoomIds,
+  readyRoom,
+  getWaitRooms,
 } = require('./room');
+
+const setEventListeners = (user) => {
+  user.socket.on('disconnect', (reason) => leaveUser(user, reason));
+  user.socket.on('room:ready', (ready) => readyRoom(user, ready));
+};
 
 const onConnect = (socket) => {
   const user = createUser(socket);
 
-  // 대기 중인 방목록
-  const waitRoomIds = getWaitRoomIds();
+  // 소켓 이벤트 바인딩
+  setEventListeners(user);
 
-  if (waitRoomIds.length) {
+  // 대기 중인 방목록
+  const waitRooms = getWaitRooms();
+
+  if (waitRooms.length) {
     // 대기 중인 방에 접속
-    const roomId = waitRoomIds[0];
+    const roomId = waitRooms[0].id;
 
     // 방 접속
     joinRoom(user, roomId)

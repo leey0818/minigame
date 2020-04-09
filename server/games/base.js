@@ -1,7 +1,6 @@
 class BaseGameUser {
   constructor(socket) {
     this.socket = socket;
-    this.setEventListeners();
   }
 
   get id() {
@@ -11,8 +10,6 @@ class BaseGameUser {
   get nsp() {
     return this.socket.nsp;
   }
-
-  setEventListeners() {}
 }
 
 module.exports = { BaseGameUser };

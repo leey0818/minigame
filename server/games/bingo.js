@@ -11,6 +11,11 @@ const roomMap = {
 };
 
 class BingoUser extends BaseGameUser {
+  constructor(socket) {
+    super(socket);
+    this.setEventListeners();
+  }
+
   // set event listener
   setEventListeners() {
     this.socket.on('disconnect', onDisconnect(this));

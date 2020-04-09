@@ -1,17 +1,29 @@
 const roomMap = {};
 
 class GameRoom {
-  constructor(owner) {
+  constructor() {
     this.id = `room_${getRandomId()}`;
     this.title = '방 제목';
     this.board = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
-    this.users = [owner]; // 방인원 (최대 2명)
-    this.owner = owner;   // 방장
-    this.start = false;   // 게임시작 여부
-    this.turn  = 0;  // 차례
+    this.ready = new Set();    // 준비인원
+    this.users = [];    // 방인원 (최대 2명)
+    this.owner = null;  // 방장
+    this.start = false; // 게임시작 여부
+    this.turn  = 0;     // 차례
   }
 
-  leaveUser(user) {
+  // 유저 입장
+  join(user) {
+    this.users.push(user);
+
+    // 첫 유저면 방장
+    if (this.users.length === 1) {
+      this.owner = user;
+    }
+  }
+
+  // 유저 퇴장
+  leave(user) {
     const idx = this.users.indexOf(user);
     // 방 유저에서 삭제
     if (idx >= 0) {
@@ -28,6 +40,20 @@ class GameRoom {
       this.owner = this.users[0];
     }
   }
+
+  // 유저 준비
+  ready(user, isReady) {
+    if (!this.users.includes(user)) return;
+
+    if (isReady) {
+      this.ready.add(user);
+    } else {
+      this.ready.delete(user);
+    }
+
+    // 다른 유저에게 준비상태 알림
+    user.socket.to(this.id).emit('room:ready', { user: user.id, ready: isReady });
+  }
 }
 
 const getRandomId = () => {
@@ -39,20 +65,17 @@ const getRandomId = () => {
   return id;
 };
 
+/**
+ * 방 생성
+ * @param {GameUser} user 유저 객체
+ */
 const createRoom = (user) => {
-  if (user.room) {
-    return Promise.reject({
-      reason: 'Already joined room',
-      room: {
-        id: user.room.id,
-        title: user.room.title
-      }
-    });
-  }
+  // 이미 입장한 방이 있으면 퇴장 후 방 생성
+  user.leaveRoom();
 
   // 방 생성
   return new Promise((resolve) => {
-    const room = new GameRoom(user);
+    const room = new GameRoom();
 
     user.socket.join(room.id, () => {
       console.log(`created room ${room.id} by user ${user.id}`);
@@ -62,7 +85,7 @@ const createRoom = (user) => {
       console.log(`created room size: ${Object.keys(roomMap).length}`);
 
       // 유저 객체에 방 객체 추가
-      user.room = room;
+      user.joinRoom(room);
 
       // 응답
       resolve({ room: { id: room.id, title: room.title } });
@@ -72,7 +95,7 @@ const createRoom = (user) => {
 
 /**
  * 방 입장
- * @param {GameUser} user 사용자 객체
+ * @param {GameUser} user 유저 객체
  * @param {string} roomId 입장할 방 ID
  */
 const joinRoom = (user, roomId) => {
@@ -88,9 +111,8 @@ const joinRoom = (user, roomId) => {
   // 방 입장
   return new Promise((resolve) => {
     user.socket.join(room.id, () => {
-      // 방에 사용자 정보 추가
-      room.users.push(user);
-      user.room = room;
+      // 사용자 정보에 방 추가
+      user.joinRoom(room);
 
       console.log(`joined room ${room.id}[${room.users.length}] to user ${user.id}`);
 
@@ -106,12 +128,22 @@ const joinRoom = (user, roomId) => {
   });
 };
 
+/**
+ * 유저 방 준비상태 변경
+ * @param {GameUser} user 유저 객체
+ * @param {boolean} isReady 준비 상태
+ */
+const readyRoom = (user, isReady) => {
+  if (user.room) {
+    user.room.ready(user, isReady);
+  }
+};
+
+/**
+ * 대기 중인 방목록 조회
+ */
 const getWaitRooms = () => {
   return Object.values(roomMap).filter((room) => room.users.length < 2);
 };
 
-const getWaitRoomIds = () => {
-  return getWaitRooms().map((room) => room.id);
-};
-
-module.exports = { createRoom, joinRoom, getWaitRooms, getWaitRoomIds };
+module.exports = { createRoom, joinRoom, readyRoom, getWaitRooms };
