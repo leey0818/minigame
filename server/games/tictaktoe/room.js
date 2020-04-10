@@ -34,11 +34,16 @@ class GameRoom {
     if (this.users.length === 0) {
       console.log(`Destroyed room. ${this.id}`);
       delete roomMap[this.id];
+      return;
     }
+
     // 내가 방장이면 다른사람에게 방장권한 부여
-    else if (this.owner === user) {
+    if (this.owner === user) {
       this.owner = this.users[0];
     }
+
+    // 다른 사람에게 알림
+    user.socket.to(this.id).emit('room:chat', { system: true, text: `${user.nickname} 님이 퇴장하였습니다.` });
   }
 
   // 유저 준비
@@ -99,7 +104,7 @@ const createRoom = (user) => {
  * @param {string} roomId 입장할 방 ID
  */
 const joinRoom = (user, roomId) => {
-  if (!getWaitRoomIds().includes(roomId)) {
+  if (!getWaitRooms().some((room) => room.id === roomId)) {
     return Promise.reject({ reason: 'Not waiting room' });
   }
   if (!roomMap[roomId]) {
@@ -117,7 +122,9 @@ const joinRoom = (user, roomId) => {
       console.log(`joined room ${room.id}[${room.users.length}] to user ${user.id}`);
 
       // broadcast
-      user.socket.to(room.id).emit('room:join', { opponent: { nickname: user.nickname } });
+      user.socket.to(room.id).emit('room:enter', { opponent: { nickname: user.nickname } });
+      user.socket.to(room.id).emit('room:chat', { system: true, text: `${user.nickname} 님이 입장하였습니다.` });
+      user.socket.emit('room:chat', { system: true, text: `${room.id} 방에 입장하였습니다. 현재 인원: ${room.users.length}명` });
 
       // 응답
       resolve({
@@ -139,6 +146,12 @@ const readyRoom = (user, isReady) => {
   }
 };
 
+const chatRoom = (user, text) => {
+  if (user.room) {
+    user.nsp.to(user.room.id).emit('room:chat', { user: user.id, text });
+  }
+};
+
 /**
  * 대기 중인 방목록 조회
  */
@@ -146,4 +159,4 @@ const getWaitRooms = () => {
   return Object.values(roomMap).filter((room) => room.users.length < 2);
 };
 
-module.exports = { createRoom, joinRoom, readyRoom, getWaitRooms };
+module.exports = { createRoom, joinRoom, readyRoom, chatRoom, getWaitRooms };

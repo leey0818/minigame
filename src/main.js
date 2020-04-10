@@ -2,7 +2,7 @@ import Vue from 'vue'
 import App from './App'
 import router from './router'
 import './plugins/bootstrap'
-import './plugins/socket'
+// import './plugins/socket'
 
 new Vue({
   router,

@@ -6,12 +6,14 @@ const {
   createRoom,
   joinRoom,
   readyRoom,
+  chatRoom,
   getWaitRooms,
 } = require('./room');
 
 const setEventListeners = (user) => {
   user.socket.on('disconnect', (reason) => leaveUser(user, reason));
   user.socket.on('room:ready', (ready) => readyRoom(user, ready));
+  user.socket.on('room:chat', (text) => chatRoom(user, text));
 };
 
 const onConnect = (socket) => {
